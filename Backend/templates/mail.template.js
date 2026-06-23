@@ -19,7 +19,7 @@ let emailTemplate = `
     >
       <div style="display: flex; margin-bottom: 30px; gap: 20px">
         <img
-          src="https://your-deployed-url.vercel.app/logo-rideshare.png"
+          src="https://ride-share-smoky-five.vercel.app/logo-rideshare.png"
           alt="Ride Share"
           style="margin: 0px auto; height: 60px"
         />
