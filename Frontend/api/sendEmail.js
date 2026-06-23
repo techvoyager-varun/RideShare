@@ -1,8 +1,8 @@
-const { Resend } = require('resend');
+import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS configuration
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
     });
 
     if (error) {
-      console.error('Resend error:', error);
+      console.error('Resend error:', JSON.stringify(error));
       return res.status(400).json({ success: false, error: error.message });
     }
 
