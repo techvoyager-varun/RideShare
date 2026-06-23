@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "../components/index";
 import background from "/get_started_illustration.jpg";
 import { useNavigate } from "react-router-dom";
-import logo from '/logo-quickride.png'
+import logo from '/logo-rideshare.png'
 
 function GetStarted() {
   const navigate = useNavigate();

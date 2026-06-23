@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'RideShare <onboarding@resend.dev>', // Update with your verified domain in production
       to,
       subject,
       html,
