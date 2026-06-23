@@ -30,7 +30,7 @@ export default async function handler(req, res) {
   try {
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to,
+      to: Array.isArray(to) ? to : [to],
       subject,
       html,
     });
