@@ -21,10 +21,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // -------------------------------------------------
+  // DEBUG – dump the request payload so we can see it
+  // -------------------------------------------------
+  console.log('📨 sendEmail payload →', JSON.stringify(req.body, null, 2));
+
   const { to, subject, html } = req.body;
 
   if (!to || !subject || !html) {
-    return res.status(400).json({ error: 'Missing required fields: to, subject, html' });
+    // Return the payload we received so we can debug it in the browser
+    return res.status(400).json({
+      error: 'Missing required fields: to, subject, html',
+      received: req.body,
+    });
   }
 
   try {
