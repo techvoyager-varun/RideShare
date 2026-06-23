@@ -1,10 +1,10 @@
-import { Resend } from 'resend';
+const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS configuration
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
@@ -28,15 +28,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const data = await resend.emails.send({
-      from: 'RideShare <onboarding@resend.dev>', // Update with your verified domain in production
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev',
       to,
       subject,
       html,
     });
 
+    if (error) {
+      console.error('Resend error:', error);
+      return res.status(400).json({ success: false, error: error.message });
+    }
+
     res.status(200).json({ success: true, data });
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 }
