@@ -113,8 +113,12 @@ function CaptainHomeScreen() {
     try {
       if (newRide._id != "" && otp.length == 6) {
         setLoading(true);
-        const response = await axios.get(
-          `${import.meta.env.VITE_SERVER_URL}/ride/start-ride?rideId=${newRide._id}&otp=${otp}`,
+        const response = await axios.post(
+          `${import.meta.env.VITE_SERVER_URL}/ride/start-ride`,
+          {
+            rideId: newRide._id,
+            otp: otp,
+          },
           {
             headers: {
               token: token,
@@ -202,15 +206,35 @@ function CaptainHomeScreen() {
           switch (error.code) {
             case error.PERMISSION_DENIED:
               console.error("User denied the request for Geolocation.");
+              showAlert(
+                "Location Permission Denied",
+                "Please enable location services in your browser settings to accept and navigate rides.",
+                "failure"
+              );
               break;
             case error.POSITION_UNAVAILABLE:
               console.error("Location information is unavailable.");
+              showAlert(
+                "Location Unavailable",
+                "Your location details are unavailable. Please check your GPS and try again.",
+                "failure"
+              );
               break;
             case error.TIMEOUT:
               console.error("The request to get user location timed out.");
+              showAlert(
+                "Location Request Timeout",
+                "The request to retrieve your location timed out. Please try refreshing.",
+                "failure"
+              );
               break;
             default:
               console.error("An unknown error occurred.");
+              showAlert(
+                "Location Error",
+                "An unknown location error occurred.",
+                "failure"
+              );
           }
         }
       );

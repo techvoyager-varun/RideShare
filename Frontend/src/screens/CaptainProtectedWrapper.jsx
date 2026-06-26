@@ -27,13 +27,13 @@ function CaptainProtectedWrapper({ children }) {
       })
       .then((response) => {
         if (response.status === 200) {
-          const captain = response.data.captain;
-          setCaptain(captain);
+          const captainData = response.data.captain;
+          setCaptain(captainData);
           localStorage.setItem(
             "userData",
-            JSON.stringify({ type: "captain", data: captain, }));
+            JSON.stringify({ type: "captain", data: captainData, }));
+          setIsVerified(captainData.emailVerified);
         }
-        setIsVerified(captain.emailVerified)
       })
       .catch((err) => {
         localStorage.removeItem("token");
@@ -46,10 +46,6 @@ function CaptainProtectedWrapper({ children }) {
   }, [token]);
 
   if (loading) return <Loading />;
-
-  if (isVerified === false) {
-    return <VerifyEmail user={captain} role={"captain"} />;
-  }
 
   return <>{children}</>;
 }

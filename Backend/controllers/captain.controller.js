@@ -82,7 +82,7 @@ module.exports.loginCaptain = asyncHandler(async (req, res) => {
 
   const captain = await captainModel.findOne({ email }).select("+password");
   if (!captain) {
-    res.status(404).json({ message: "Invalid email or password" });
+    return res.status(404).json({ message: "Invalid email or password" });
   }
 
   const isMatch = await captain.comparePassword(password);
@@ -152,6 +152,7 @@ module.exports.resetPassword = asyncHandler(async (req, res) => {
   if (!captain) return res.status(404).json({ message: "User not found. Please check your credentials and try again" });
 
   captain.password = await captainModel.hashPassword(password);
+  captain.passwordChangedAt = new Date();
   await captain.save();
 
   res.status(200).json({ message: "Your password has been successfully reset. You can now log in with your new credentials" });

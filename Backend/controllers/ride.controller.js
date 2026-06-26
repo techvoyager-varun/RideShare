@@ -17,6 +17,11 @@ module.exports.chatDetails = async (req, res) => {
       return res.status(400).json({ message: "Ride not found" });
     }
 
+    const userId = req.user?._id?.toString() || req.captain?._id?.toString();
+    if (ride.user?._id?.toString() !== userId && ride.captain?._id?.toString() !== userId) {
+      return res.status(403).json({ message: "Forbidden: You are not authorized to view this chat" });
+    }
+
     const response = {
       user: {
         socketId: ride.user?.socketId,
@@ -191,7 +196,7 @@ module.exports.startRide = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { rideId, otp } = req.query;
+  const { rideId, otp } = req.body;
 
   try {
     const ride = await rideService.startRide({
@@ -239,16 +244,20 @@ module.exports.cancelRide = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { rideId } = req.query;
+  const { rideId } = req.body;
 
   try {
-    const ride = await rideModel.findOneAndUpdate(
-      { _id: rideId },
-      {
-        status: "cancelled",
-      },
-      { new: true }
-    );
+    const ride = await rideModel.findOne({ _id: rideId });
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    if (ride.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden: You are not authorized to cancel this ride" });
+    }
+
+    ride.status = "cancelled";
+    await ride.save();
 
     const pickupCoordinates = await mapService.getAddressCoordinate(ride.pickup);
     const captainsInRadius = await mapService.getCaptainsInTheRadius(

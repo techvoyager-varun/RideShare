@@ -49,10 +49,6 @@ function UserProtectedWrapper({ children }) {
 
   if (loading) return <Loading />;
 
-  if (isVerified === false) {
-    return <VerifyEmail user={user} role={"user"} />;
-  }
-
   return <>{children}</>;
 }
 

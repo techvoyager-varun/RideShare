@@ -21,6 +21,8 @@ const dbStream = require("./services/logging.service");
 require("./config/db");
 const PORT = process.env.PORT || 4000;
 
+const helmet = require("helmet");
+
 if (process.env.ENVIRONMENT == "production") {
   app.use(
     morgan(":method :url :status :response-time ms - :res[content-length]", {
@@ -30,7 +32,11 @@ if (process.env.ENVIRONMENT == "production") {
 } else {
   app.use(morgan("dev"));
 }
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true
+}));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

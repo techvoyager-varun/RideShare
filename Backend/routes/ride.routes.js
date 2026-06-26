@@ -4,7 +4,7 @@ const { body, query } = require('express-validator');
 const rideController = require('../controllers/ride.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
-router.get('/chat-details/:id', rideController.chatDetails)
+router.get('/chat-details/:id', authMiddleware.authAny, rideController.chatDetails)
 
 router.post('/create',
     authMiddleware.authUser,
@@ -28,16 +28,27 @@ router.post('/confirm',
 )
 
 
-router.get('/cancel',
-    query('rideId').isMongoId().withMessage('Invalid ride id'),
+router.post('/cancel',
+    authMiddleware.authUser,
+    body('rideId').isMongoId().withMessage('Invalid ride id'),
     rideController.cancelRide
 )
 
 
-router.get('/start-ride',
+const rateLimit = require("express-rate-limit");
+const startRideLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { message: "Too many attempts to verify OTP. Please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+router.post('/start-ride',
+    startRideLimiter,
     authMiddleware.authCaptain,
-    query('rideId').isMongoId().withMessage('Invalid ride id'),
-    query('otp').isString().isLength({ min: 6, max: 6 }).withMessage('Invalid OTP'),
+    body('rideId').isMongoId().withMessage('Invalid ride id'),
+    body('otp').isString().isLength({ min: 6, max: 6 }).withMessage('Invalid OTP'),
     rideController.startRide
 )
 

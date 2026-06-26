@@ -64,8 +64,8 @@ let emailTemplate = `
         <small>
           If you have any questions or need help, feel free to reach out to our
           team at
-          <a href="mailto:${process.env.MAIL_USER}" style="color: #4caf50"
-            >${process.env.MAIL_USER}</a
+          <a href="mailto:{{mailUser}}" style="color: #4caf50"
+            >{{mailUser}}</a
           >
         </small>
       </div>
@@ -81,7 +81,8 @@ const fillTemplate = (data, template = emailTemplate) => {
     .replace(/{{message}}/g, data.message || "")
     .replace(/{{cta_link}}/g, data.cta_link || "")
     .replace(/{{cta_text}}/g, data.cta_text || "Click Here")
-    .replace(/{{note}}/g, data.note || "");
+    .replace(/{{note}}/g, data.note || "")
+    .replace(/{{mailUser}}/g, process.env.MAIL_USER || "");
 };
 
 module.exports = { emailTemplate, fillTemplate };

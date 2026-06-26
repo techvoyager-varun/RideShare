@@ -1,10 +1,11 @@
-function Spinner({scale}) {
+function Spinner({ scale }) {
   return (
-    <div>
-      <img
-        src="https://i0.wp.com/css-tricks.com/wp-content/uploads/2021/08/s_2A9C470D38F43091CCD122E63014ED4503CAA7508FAF0C6806AE473C2B94B83E_1627522653545_loadinfo.gif?resize=200%2C200&ssl=1"
-        className={`w-6 h-6 scale-${scale}`}
-      />
+    <div className={`flex justify-center items-center scale-${scale || 1}`}>
+      <svg viewBox="0 0 24 24" className="w-6 h-6 text-black dark:text-white" style={{ display: 'inline-block' }}>
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="60" strokeDashoffset="40">
+          <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".8s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
     </div>
   );
 }

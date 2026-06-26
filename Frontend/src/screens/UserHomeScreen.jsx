@@ -8,16 +8,19 @@ import {
   RideDetails,
   Sidebar,
   LiveMap,
+  Alert,
 } from "../components";
 import axios from "axios";
 import debounce from "lodash.debounce";
 import { SocketDataContext } from "../contexts/SocketContext";
 import Console from "../utils/console";
+import { useAlert } from "../hooks/useAlert";
 
 function UserHomeScreen() {
   const token = localStorage.getItem("token"); // this token is in use
   const { socket } = useContext(SocketDataContext);
   const { user } = useUser();
+  const { alert, showAlert, hideAlert } = useAlert();
   const [messages, setMessages] = useState(
     JSON.parse(localStorage.getItem("messages")) || []
   );
@@ -81,9 +84,7 @@ function UserHomeScreen() {
       setDestinationLocation(value);
     }
 
-    if (import.meta.env.VITE_ENVIRONMENT === "production") {
-      handleLocationChange(value, token);
-    }
+    handleLocationChange(value, token);
 
     if (e.target.value.length < 3) {
       setLocationSuggestion([]);
@@ -166,13 +167,10 @@ function UserHomeScreen() {
     const rideDetails = JSON.parse(localStorage.getItem("rideDetails"));
     try {
       setLoading(true);
-      await axios.get(
-        `${import.meta.env.VITE_SERVER_URL}/ride/cancel?rideId=${rideDetails._id || rideDetails.confirmedRideData._id
-        }`,
+      await axios.post(
+        `${import.meta.env.VITE_SERVER_URL}/ride/cancel`,
         {
-          pickup: pickupLocation,
-          destination: destinationLocation,
-          vehicleType: selectedVehicle,
+          rideId: rideDetails._id || rideDetails.confirmedRideData._id,
         },
         {
           headers: {
@@ -227,15 +225,35 @@ function UserHomeScreen() {
           switch (error.code) {
             case error.PERMISSION_DENIED:
               console.error("User denied the request for Geolocation.");
+              showAlert(
+                "Location Permission Denied",
+                "Please enable location services in your browser settings to use the map and request rides.",
+                "failure"
+              );
               break;
             case error.POSITION_UNAVAILABLE:
               console.error("Location information is unavailable.");
+              showAlert(
+                "Location Unavailable",
+                "Your location details are unavailable. Please check your GPS.",
+                "failure"
+              );
               break;
             case error.TIMEOUT:
               console.error("The request to get user location timed out.");
+              showAlert(
+                "Location Request Timeout",
+                "The request to retrieve your location timed out. Please try again.",
+                "failure"
+              );
               break;
             default:
               console.error("An unknown error occurred.");
+              showAlert(
+                "Location Error",
+                "An unknown location error occurred.",
+                "failure"
+              );
           }
         }
       );
@@ -249,14 +267,14 @@ function UserHomeScreen() {
 
   // Socket Events
   useEffect(() => {
-    if (user._id) {
-      socket.emit("join", {
-        userId: user._id,
-        userType: "user",
-      });
-    }
+    if (!user._id) return;
 
-    socket.on("ride-confirmed", (data) => {
+    socket.emit("join", {
+      userId: user._id,
+      userType: "user",
+    });
+
+    const handleRideConfirmed = (data) => {
       Console.log("Clearing Timeout", rideTimeout);
       clearTimeout(rideTimeout.current);
       Console.log("Cleared Timeout");
@@ -269,9 +287,9 @@ function UserHomeScreen() {
         captain: data.captain?.location?.coordinates ? [data.captain.location.coordinates[1], data.captain.location.coordinates[0]] : null
       });
       setConfirmedRideData(data);
-    });
+    };
 
-    socket.on("ride-started", (data) => {
+    const handleRideStarted = (data) => {
       Console.log("Ride started");
       setMapLocation({
         center: [data.pickupCoords?.ltd || 20, data.pickupCoords?.lng || 78],
@@ -279,9 +297,9 @@ function UserHomeScreen() {
         destination: data.destinationCoords ? [data.destinationCoords.ltd, data.destinationCoords.lng] : null,
         captain: null
       });
-    });
+    };
 
-    socket.on("ride-ended", (data) => {
+    const handleRideEnded = (data) => {
       Console.log("Ride Ended");
       setShowRideDetailsPanel(false);
       setShowSelectVehiclePanel(false);
@@ -289,24 +307,19 @@ function UserHomeScreen() {
       setDefaults();
       localStorage.removeItem("rideDetails");
       localStorage.removeItem("panelDetails");
+      updateLocation();
+    };
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setMapLocation({
-              center: [position.coords.latitude, position.coords.longitude],
-              pickup: null,
-              destination: null,
-              captain: null
-            });
-          },
-          (error) => {
-            console.error("Error fetching position:", error);
-          }
-        );
-      }
-    });
-  }, [user]);
+    socket.on("ride-confirmed", handleRideConfirmed);
+    socket.on("ride-started", handleRideStarted);
+    socket.on("ride-ended", handleRideEnded);
+
+    return () => {
+      socket.off("ride-confirmed", handleRideConfirmed);
+      socket.off("ride-started", handleRideStarted);
+      socket.off("ride-ended", handleRideEnded);
+    };
+  }, [user, socket]);
 
   // Get ride details
   useEffect(() => {
@@ -379,6 +392,13 @@ function UserHomeScreen() {
       className="relative w-full h-dvh bg-contain"
       style={{ backgroundImage: `url(${map})` }}
     >
+      <Alert
+        heading={alert.heading}
+        text={alert.text}
+        isVisible={alert.isVisible}
+        onClose={hideAlert}
+        type={alert.type}
+      />
       <Sidebar />
       <div className="absolute map w-full h-[120vh] z-0">
         <LiveMap 

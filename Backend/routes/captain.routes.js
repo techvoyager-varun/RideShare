@@ -12,9 +12,19 @@ router.post("/register",
     captainController.registerCaptain
 );
 
+const rateLimit = require("express-rate-limit");
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { message: "Too many login attempts. Please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 router.post("/verify-email", captainController.verifyEmail);
 
 router.post("/login", 
+    loginLimiter,
     body("email").isEmail().withMessage("Invalid Email"),
     captainController.loginCaptain
 );

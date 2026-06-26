@@ -12,6 +12,7 @@ function ChatScreen() {
   const scrollableDivRef = useRef(null);
 
   const { socket } = useContext(SocketDataContext);
+  const token = localStorage.getItem("token");
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -29,7 +30,12 @@ function ChatScreen() {
   const getUserDetails = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_SERVER_URL}/ride/chat-details/${rideId}`
+        `${import.meta.env.VITE_SERVER_URL}/ride/chat-details/${rideId}`,
+        {
+          headers: {
+            token: token,
+          },
+        }
       );
 
       //  Protecting unauthorised users to read the chats
@@ -39,8 +45,6 @@ function ChatScreen() {
         return;
       }
       setMessages(response.data.messages);
-
-      socket.emit("join-room", rideId);
       if (userType == "user") {
         setUserData(response.data.captain);
       }
@@ -81,10 +85,8 @@ function ChatScreen() {
   }, [userData]);
 
   useEffect(() => {
-    setTimeout(() => {
-
-      getUserDetails();
-    }, 3000);
+    socket.emit("join-room", rideId);
+    getUserDetails();
 
     socket.on("receiveMessage", ({ msg, by, time }) => {
       setMessages((prev) => [...prev, { msg, by, time }]);

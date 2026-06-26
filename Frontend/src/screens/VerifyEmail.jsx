@@ -28,10 +28,14 @@ const VerifyEmail = () => {
       }
     } catch (error) {
       Console.error("Error verifying email:", error);
-      if (error.response.data.message === "Token Expired") {
-        setResponse("Your verification link is expired. Please request a new verification link.");
-      } else if (error.response && error.response.data && error.response.data.message) {
-        setResponse(error.response.data.message || "An error occurred while verifying your email.");
+      if (error.response) {
+        if (error.response.status === 400 || error.response.status === 401) {
+          setResponse("Your verification link is expired or invalid. Please request a new verification link.");
+        } else if (error.response.data && error.response.data.message) {
+          setResponse(error.response.data.message);
+        } else {
+          setResponse("An error occurred while verifying your email.");
+        }
       } else {
         setResponse("An unexpected error occurred. Please try again later.");
       }

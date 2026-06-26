@@ -100,15 +100,21 @@ module.exports.confirmRide = async ({ rideId, captain }) => {
   }
 
   try {
-    await rideModel.findOneAndUpdate(
+    const updatedRide = await rideModel.findOneAndUpdate(
       {
         _id: rideId,
+        status: "pending",
       },
       {
         status: "accepted",
         captain: captain._id,
-      }
+      },
+      { new: true }
     );
+
+    if (!updatedRide) {
+      throw new Error("Ride already accepted or not pending");
+    }
 
     const captainData = await captainModel.findOne({ _id: captain._id });
 

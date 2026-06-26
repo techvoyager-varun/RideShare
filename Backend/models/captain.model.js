@@ -81,11 +81,16 @@ const captainSchema = new mongoose.Schema(
     },
     emailVerified: {
       type: Boolean,
-      default: false,
+      default: true,
+    },
+    passwordChangedAt: {
+      type: Date,
     },
   },
   { timestamps: true }
 );
+
+captainSchema.index({ location: "2dsphere" });
 
 captainSchema.statics.hashPassword = async function (password) {
   return await bcrypt.hash(password, 10);
